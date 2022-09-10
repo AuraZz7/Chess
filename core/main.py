@@ -11,6 +11,7 @@ def main():
             if e.type == pg.QUIT:
                 running = False
 
-        # game.board.draw()
+        game.board.draw()
+        game.board.update()
 
         pg.display.update()
