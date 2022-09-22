@@ -7,6 +7,7 @@ from core import tools
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 800
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pg.RLEACCEL)
+pg.display.set_caption("Chess")
 
 clock = pg.time.Clock()
 fps = 60
@@ -15,6 +16,10 @@ fps = 60
 
 board_col1 = (235, 236, 208)
 board_col2 = (119, 149, 86)
+yellow_1 = (246, 246, 105)
+yellow_2 = (186, 202, 43)
+circle_col1 = (214, 214, 189)
+circle_col2 = (106, 135, 77)
 
 # ---- GAME VARIABLES ----
 
