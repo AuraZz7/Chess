@@ -14,6 +14,7 @@ class Board:
         }
         self.active_piece = {}
         self.active_offset = 0
+        self.active_tile = None
 
         self.clicked = False
 
@@ -22,21 +23,28 @@ class Board:
         click = pg.mouse.get_pressed()[0]
         if 0 <= pos[0] <= SCREEN_WIDTH and 0 <= pos[1] <= SCREEN_HEIGHT:
             x, y = math.floor(pos[0] / TILE_SIZE), math.floor(pos[1] / TILE_SIZE)
-            tile = self.get_tile_from_pos((x, y))
+            # check if user clicks left mouse button
             if click:
+                # everything inside this expression only occurs once, on initial click
                 if not self.clicked:
                     self.clicked = True
+                    # checking if the tile clicked by the user contains a chess piece
+                    if self.get_tile_from_pos((x, y)) in self.pieces:
+                        self.active_tile = self.get_tile_from_pos((x, y))
 
-                    self.active_piece[tile] = self.pieces[tile]
-                    self.pieces.pop(tile)
+                        self.active_piece[self.active_tile] = self.pieces[self.active_tile]
+                        self.pieces.pop(self.active_tile)
 
-                    self.active_offset = (pos[0] - 0.5*TILE_SIZE, pos[1] - 0.5*TILE_SIZE)
-
-            if not click and self.clicked:
-                self.clicked = False
-
-                self.pieces[tile] = self.active_piece[tile]
-                self.active_piece.pop(tile)
+            # check if user is NOT pressing left mouse button
+            if not click:
+                # check if the user was pressing it, but has released the LMB,
+                # everything here happens just once on initial release.
+                if self.clicked:
+                    self.clicked = False
+                    drop_tile = self.get_tile_from_pos((x, y))
+                    if drop_tile not in self.pieces:
+                        self.pieces[drop_tile] = self.active_piece[self.active_tile]
+                        self.active_piece.pop(self.active_tile)
 
     def draw(self):
         self.draw_grid()
