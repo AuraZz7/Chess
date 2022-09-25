@@ -22,7 +22,10 @@ class Board:
         # array of available tiles for the current move
         self.available_tiles = []
 
+        self.last_move = []
         self.clicked = False
+
+        self.turn = "w"
 
     def update(self):
 
@@ -41,58 +44,72 @@ class Board:
                     self.active_piece[self.active_tile] = self.pieces[self.active_tile]
                     self.pieces.pop(self.active_tile)
 
-                    # if piece is pawn
                     colour, p_type = self.active_piece[self.active_tile].split("_")
 
                     # all the logic to determine which tiles the piece can move to
+                    # pawn
                     if p_type == "p":
                         if colour == "w":
-                            self.available_tiles = [self.active_tile - (8*i) for i in range(1, (3 if 48 <= self.active_tile <= 55 else 2))]
+                            if self.active_tile - 8 not in self.pieces:
+                                self.available_tiles = [self.active_tile - (8*i) for i in range(1, (3 if 48 <= self.active_tile <= 55 else 2))]
                         elif colour == "b":
-                            self.available_tiles = [self.active_tile + (8*i) for i in range(1, (3 if 8 <= self.active_tile <= 15 else 2))]
+                            if self.active_tile + 8 not in self.pieces:
+                                self.available_tiles = [self.active_tile + (8*i) for i in range(1, (3 if 8 <= self.active_tile <= 15 else 2))]
+                    # rook
                     elif p_type == "r":
-                        up_blocked = down_blocked = left_blocked = right_blocked = False
-                        for i in range(1, rows):
-                            if not up_blocked:
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile - 8 * i)
-                                if self.active_tile - 8*i in self.pieces or tile_y < 0:
-                                    up_blocked = True
-                                if self.active_tile - 8*i not in self.pieces and not up_blocked:
-                                    self.available_tiles.append(self.active_tile - 8*i)
-                            if not down_blocked:
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + 8 * i)
-                                if self.active_tile + 8*i in self.pieces or tile_y > 7:
-                                    down_blocked = True
-                                if self.active_tile + 8*i not in self.pieces and not down_blocked:
-                                    self.available_tiles.append(self.active_tile + 8*i)
-                            if not left_blocked:
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile - i)
-                                if self.active_tile - i in self.pieces or tile_x < 0:
-                                    left_blocked = True
-                                if self.active_tile - i not in self.pieces and not left_blocked:
-                                    self.available_tiles.append(self.active_tile - i)
-                            if not right_blocked:
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + i)
-                                if self.active_tile + i in self.pieces or tile_x > 7:
-                                    right_blocked = True
-                                if self.active_tile + i not in self.pieces and not right_blocked:
-                                    self.available_tiles.append(self.active_tile + i)
+                        for d in range(4):
+                            for i in range(1, rows):
+                                plus_condition = (-8 * i) if d == 0 else (8 * i) if d == 1 else (-i) if d == 2 else (i)
+                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + plus_condition)
+                                if d in (0, 1):
+                                    if self.get_pos_from_tile(self.active_tile)[0] != tile_x: break
+                                elif d in (2, 3):
+                                    if self.get_pos_from_tile(self.active_tile)[1] != tile_y: break
+                                if self.active_tile + plus_condition in self.pieces or tile_x < 0 or tile_x > 7 or tile_y < 0 or tile_y > 7:
+                                    break
+                                self.available_tiles.append(self.active_tile + plus_condition)
 
+                    elif p_type == "b":
+                        for d in range(4):
+                            for i in range(1, rows):
+                                plus_condition = (-9 * i) if d == 0 else (-7 * i) if d == 1 else (7 * i) if d == 2 else (9 * i)
+                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + plus_condition)
+
+                                if self.active_tile + plus_condition in self.pieces or tile_x < 0 or tile_x > 7 or tile_y < 0 or tile_y > 7:
+                                    break
+
+                                print(tile_x, tile_y)
+                                self.available_tiles.append(self.active_tile + plus_condition)
+                    elif p_type == "k":
+                        allowed_moves = (-15, -17, -6, 10, -10, 6, 17, 15)
+                        for move in allowed_moves:
+                            tile_x, tile_y = self.get_pos_from_tile(self.active_tile + move)
+                            if self.active_tile + move not in self.pieces and 0 <= tile_x <= 7 and 0 <= tile_y <= 7:
+                                self.available_tiles.append(self.active_tile + move)
+                        print(self.available_tiles)
+
+                else:
+                    self.active_tile = None
             # check if the user WAS pressing it, but has released the LMB,
             # everything here happens just once on initial release.
             if not click and self.clicked:
                 self.clicked = False
                 self.drop_tile = self.get_tile_from_pos((x, y))
-                # check if the tile which the user released the mouse on has a piece on it
+                # check if the tile which the user released the mouse on doesn't have a piece on it
                 if self.drop_tile not in self.pieces:
+                    # check if the tile can be moved to
                     if self.drop_tile in self.available_tiles:
+                        self.last_move = [self.active_tile, self.drop_tile]
                         self.pieces[self.drop_tile] = self.active_piece[self.active_tile]
                         self.active_piece.pop(self.active_tile)
+                        self.turn = "w" if self.turn == "b" else "b"
                     else:
-                        self.pieces[self.active_tile] = self.active_piece[self.active_tile]
-                        self.active_piece.pop(self.active_tile)
+                        if self.active_piece:
+                            self.pieces[self.active_tile] = self.active_piece[self.active_tile]
+                            self.active_piece.pop(self.active_tile)
                 else:
-                    pass
+                    self.pieces[self.active_tile] = self.active_piece[self.active_tile]
+                    self.active_piece.pop(self.active_tile)
                 self.available_tiles.clear()
 
     def draw(self):
@@ -108,9 +125,9 @@ class Board:
             x, y = self.get_pos_from_tile(tile)
             rect = (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             if (x+y) % 2 == 0:
-                pg.draw.rect(screen, yellow_1 if tile in (self.drop_tile, self.active_tile) else board_col1, rect)
+                pg.draw.rect(screen, yellow_1 if tile in self.last_move or tile in (self.drop_tile, self.active_tile) else board_col1, rect)
             else:
-                pg.draw.rect(screen, yellow_2 if tile in (self.drop_tile, self.active_tile) else board_col2, rect)
+                pg.draw.rect(screen, yellow_2 if tile in self.last_move or tile in (self.drop_tile, self.active_tile) else board_col2, rect)
             # draw circles on tiles which are a valid move
             if tile in self.available_tiles:
                 pg.draw.circle(screen, circle_col1 if (x+y) % 2 == 0 else circle_col2,
