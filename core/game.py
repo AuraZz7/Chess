@@ -5,12 +5,18 @@ import math
 class Board:
     def __init__(self):
         self.grid = [(x, y) for x in range(rows) for y in range(cols)]
-        self.grid = [i for i in range(rows*cols)]
+        # self.grid = [i for i in range(rows*cols)]
+        # self.pieces = {
+        #     0: "b_r", 1: "b_k", 2: "b_b", 3: "b_queen", 4: "b_king", 5: "b_b", 6: "b_k", 7: "b_r",
+        #     8: "b_p", 9: "b_p", 10: "b_p", 11: "b_p", 12: "b_p", 13: "b_p", 14: "b_p", 15: "b_p",
+        #     48: "w_p", 49: "w_p", 50: "w_p", 51: "w_p", 52: "w_p", 53: "w_p", 54: "w_p", 55: "w_p",
+        #     56: "w_r", 57: "w_k", 58: "w_b", 59: "w_queen", 60: "w_king", 61: "w_b", 62: "w_k", 63: "w_r"
+        # }
         self.pieces = {
-            0: "b_r", 1: "b_k", 2: "b_b", 3: "b_queen", 4: "b_king", 5: "b_b", 6: "b_k", 7: "b_r",
-            8: "b_p", 9: "b_p", 10: "b_p", 11: "b_p", 12: "b_p", 13: "b_p", 14: "b_p", 15: "b_p",
-            48: "w_p", 49: "w_p", 50: "w_p", 51: "w_p", 52: "w_p", 53: "w_p", 54: "w_p", 55: "w_p",
-            56: "w_r", 57: "w_k", 58: "w_b", 59: "w_queen", 60: "w_king", 61: "w_b", 62: "w_k", 63: "w_r"
+            (0, 0): "b_r", (1, 0): "b_k", (2, 0): "b_b", (3, 0): "b_queen", (4, 0): "b_king", (5, 0): "b_b", (6, 0): "b_k", (7, 0): "b_r",
+            (0, 1): "b_p", (1, 1): "b_p", (2, 1): "b_p", (3, 1): "b_p", (4, 1): "b_p", (5, 1): "b_p", (6, 1): "b_p", (7, 1): "b_p",
+            (0, 6): "w_p", (1, 6): "w_p", (2, 6): "w_p", (3, 6): "w_p", (4, 6): "w_p", (5, 6): "w_p", (6, 6): "w_p", (7, 6): "w_p",
+            (0, 7): "w_r", (1, 7): "w_k", (2, 7): "w_b", (3, 7): "w_queen", (4, 7): "w_king", (5, 7): "w_b", (6, 7): "w_k", (7, 7): "w_r"
         }
         # dict containing the current piece being moved
         self.active_piece = {}
@@ -38,8 +44,8 @@ class Board:
             if click and not self.clicked:
                 self.clicked = True
                 # checking if the tile clicked by the user contains a chess piece
-                if self.get_tile_from_pos((x, y)) in self.pieces:
-                    self.active_tile = self.get_tile_from_pos((x, y))
+                if (x, y) in self.pieces:
+                    self.active_tile = (x, y)
 
                     self.active_piece[self.active_tile] = self.pieces[self.active_tile]
                     self.pieces.pop(self.active_tile)
@@ -47,54 +53,22 @@ class Board:
                     colour, p_type = self.active_piece[self.active_tile].split("_")
 
                     # all the logic to determine which tiles the piece can move to
-                    # pawn
                     if p_type == "p":
-                        if colour == "w":
-                            if self.active_tile - 8 not in self.pieces:
-                                self.available_tiles = [self.active_tile - (8*i) for i in range(1, (3 if 48 <= self.active_tile <= 55 else 2))]
-                        elif colour == "b":
-                            if self.active_tile + 8 not in self.pieces:
-                                self.available_tiles = [self.active_tile + (8*i) for i in range(1, (3 if 8 <= self.active_tile <= 15 else 2))]
-                    # rook
+                        self.available_tiles = self.pawn_move(x, y, colour)
                     elif p_type == "r":
-                        for d in range(4):
-                            for i in range(1, rows):
-                                plus_condition = (-8 * i) if d == 0 else (8 * i) if d == 1 else (-i) if d == 2 else (i)
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + plus_condition)
-                                if d in (0, 1):
-                                    if self.get_pos_from_tile(self.active_tile)[0] != tile_x: break
-                                elif d in (2, 3):
-                                    if self.get_pos_from_tile(self.active_tile)[1] != tile_y: break
-                                if self.active_tile + plus_condition in self.pieces or tile_x < 0 or tile_x > 7 or tile_y < 0 or tile_y > 7:
-                                    break
-                                self.available_tiles.append(self.active_tile + plus_condition)
-
+                        self.available_tiles = self.rook_move(x, y)
                     elif p_type == "b":
-                        for d in range(4):
-                            for i in range(1, rows):
-                                plus_condition = (-9 * i) if d == 0 else (-7 * i) if d == 1 else (7 * i) if d == 2 else (9 * i)
-                                tile_x, tile_y = self.get_pos_from_tile(self.active_tile + plus_condition)
-
-                                if self.active_tile + plus_condition in self.pieces or tile_x < 0 or tile_x > 7 or tile_y < 0 or tile_y > 7:
-                                    break
-
-                                print(tile_x, tile_y)
-                                self.available_tiles.append(self.active_tile + plus_condition)
+                        self.available_tiles = self.bishop_move(x, y)
                     elif p_type == "k":
-                        allowed_moves = (-15, -17, -6, 10, -10, 6, 17, 15)
-                        for move in allowed_moves:
-                            tile_x, tile_y = self.get_pos_from_tile(self.active_tile + move)
-                            if self.active_tile + move not in self.pieces and 0 <= tile_x <= 7 and 0 <= tile_y <= 7:
-                                self.available_tiles.append(self.active_tile + move)
-                        print(self.available_tiles)
+                        self.available_tiles = self.knight_move(x, y)
+                    elif p_type == "queen":
+                        self.available_tiles = self.rook_move(x, y) + self.bishop_move(x, y)
 
-                else:
-                    self.active_tile = None
             # check if the user WAS pressing it, but has released the LMB,
             # everything here happens just once on initial release.
             if not click and self.clicked:
                 self.clicked = False
-                self.drop_tile = self.get_tile_from_pos((x, y))
+                self.drop_tile = (x, y)
                 # check if the tile which the user released the mouse on doesn't have a piece on it
                 if self.drop_tile not in self.pieces:
                     # check if the tile can be moved to
@@ -112,6 +86,52 @@ class Board:
                     self.active_piece.pop(self.active_tile)
                 self.available_tiles.clear()
 
+    def pawn_move(self, x, y, colour):
+        available_moves = []
+        if colour == "w":
+            if (x, y - 1) not in self.pieces:
+                available_moves = [(x, y - i) for i in range(1, (3 if y == 6 else 2))]
+        elif colour == "b":
+            if (x, y + 1) not in self.pieces:
+                available_moves = [(x, y + i) for i in range(1, (3 if y == 1 else 2))]
+        return available_moves
+
+    def rook_move(self, x, y):
+        available_moves = []
+        for d in range(4):
+            for i in range(1, rows):
+                tile_x, tile_y = (x, y - i) if d == 0 else (x, y + i) if d == 1 else (x - i, y) if d == 2 else (
+                x + i, y)
+                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= 7 or 0 <= tile_y <= 7):
+                    break
+                available_moves.append((tile_x, tile_y))
+        return available_moves
+
+    def bishop_move(self, x, y):
+        available_moves = []
+        for d in range(4):
+            for i in range(1, rows):
+                tile_x, tile_y = (x - i, y - i) if d == 0 else (x + i, y - i) if d == 1 else (x - i, y + i) if d == 2 else (x + i, y + i)
+
+                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= 7 or 0 <= tile_y <= 7):
+                    break
+                available_moves.append((tile_x, tile_y))
+        return available_moves
+
+    def knight_move(self, x, y):
+        available_moves = []
+        for x_operator in range(2):
+            for y_operator in range(2):
+                for direction in range(2):
+                    if direction == 0:
+                        tile_x, tile_y = (x - 1 if x_operator == 0 else x + 1, y - 2 if y_operator == 0 else y + 2)
+                    else:
+                        tile_x, tile_y = (x - 2 if x_operator == 0 else x + 2, y - 1 if y_operator == 0 else y + 1)
+                    if (tile_x, tile_y) not in self.pieces and 0 <= tile_x <= 7 and 0 <= tile_y <= 7:
+                        available_moves.append((tile_x, tile_y))
+        return available_moves
+
+
     def draw(self):
         self.draw_grid()
         self.draw_pieces()
@@ -122,7 +142,7 @@ class Board:
         Draw the background with a checkered pattern
         """
         for tile in self.grid:
-            x, y = self.get_pos_from_tile(tile)
+            x, y = tile
             rect = (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             if (x+y) % 2 == 0:
                 pg.draw.rect(screen, yellow_1 if tile in self.last_move or tile in (self.drop_tile, self.active_tile) else board_col1, rect)
@@ -138,7 +158,7 @@ class Board:
         Draws all the pieces in dict 'self.pieces' to the board
         """
         for piece in self.pieces.items():
-            x, y = self.get_pos_from_tile(piece[0])
+            x, y = piece[0]
             rect = (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             colour, p_type = piece[1].split("_")
             screen.blit(p_white[p[p_type]] if colour == "w" else p_black[p[p_type]], rect)
