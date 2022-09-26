@@ -102,7 +102,7 @@ class Board:
             for i in range(1, rows):
                 tile_x, tile_y = (x, y - i) if d == 0 else (x, y + i) if d == 1 else (x - i, y) if d == 2 else (
                 x + i, y)
-                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= 7 or 0 <= tile_y <= 7):
+                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= rows or 0 <= tile_y <= rows):
                     break
                 available_moves.append((tile_x, tile_y))
         return available_moves
@@ -113,7 +113,7 @@ class Board:
             for i in range(1, rows):
                 tile_x, tile_y = (x - i, y - i) if d == 0 else (x + i, y - i) if d == 1 else (x - i, y + i) if d == 2 else (x + i, y + i)
 
-                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= 7 or 0 <= tile_y <= 7):
+                if (tile_x, tile_y) in self.pieces or not (0 <= tile_x <= rows or 0 <= tile_y <= rows):
                     break
                 available_moves.append((tile_x, tile_y))
         return available_moves
@@ -127,7 +127,7 @@ class Board:
                         tile_x, tile_y = (x - 1 if x_operator == 0 else x + 1, y - 2 if y_operator == 0 else y + 2)
                     else:
                         tile_x, tile_y = (x - 2 if x_operator == 0 else x + 2, y - 1 if y_operator == 0 else y + 1)
-                    if (tile_x, tile_y) not in self.pieces and 0 <= tile_x <= 7 and 0 <= tile_y <= 7:
+                    if (tile_x, tile_y) not in self.pieces and 0 <= tile_x <= rows and 0 <= tile_y <= rows:
                         available_moves.append((tile_x, tile_y))
         return available_moves
 
